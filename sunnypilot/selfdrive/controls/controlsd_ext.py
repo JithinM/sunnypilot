@@ -66,7 +66,10 @@ class ControlsExt:
     # MADS state
     CC_SP.mads = sm['selfdriveStateSP'].mads
 
-    CC_SP.params = self.param_store.publish()
+    # Params in opendbc
+    changed_params = self.param_store.publish()
+    if changed_params:
+      CC_SP.params = changed_params
 
     return CC_SP
 

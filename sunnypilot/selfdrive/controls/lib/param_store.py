@@ -19,6 +19,8 @@ class ParamStore:
   def __init__(self, CP: structs.CarParams):
     universal_params: list[str] = []
     brand_params: list[str] = []
+    self.values = {}
+    self.changed = False
 
     if CP.brand == "hyundai":
       brand_params.extend([
@@ -42,12 +44,17 @@ class ParamStore:
     self.values = {}
 
   def update(self, params: Params) -> None:
-    self.values = {k: params.get(k, encoding='utf8') or "0" for k in self.keys}
+    new_values = {k: params.get(k, encoding='utf8') or "0" for k in self.keys}
+    self.changed = new_values != self.values
+    self.values = new_values
 
   def publish(self) -> list[capnp.lib.capnp._DynamicStructBuilder]:
-    params_list: list[capnp.lib.capnp._DynamicStructBuilder] = []
+    if not self.changed:
+      return []
 
+    params_list: list[capnp.lib.capnp._DynamicStructBuilder] = []
     for k in self.keys:
       params_list.append(custom.CarControlSP.Param(key=k, value=self.values[k]))
 
+    self.changed = False
     return params_list
